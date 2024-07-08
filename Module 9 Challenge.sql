@@ -1,6 +1,7 @@
 create table departments(
-dept_no int,
-dept_name  varchar(30) not null
+dept_no varchar(15),
+dept_name varchar(30) not null,
+primary key (dept_no)
 )
 ;
 select *
@@ -8,6 +9,9 @@ from departments d -- alias for departments
 ;
 
 insert into departments (dept_no, dept_name)
+;
+
+drop table if exists departments;
 
 drop table if exists dept_emp;
 
@@ -19,30 +23,43 @@ drop table if exists salaries;
 
 drop table if exists titles;
 
-create table dept_emp(
-emp_no int,
-dept_no int
-)
-;
+--drop created tables to add PK and FK
+drop table if exists employee_hired1986;
+drop table if exists employee_salaries;
+drop table if exists managers;
+drop table if exists deptnos;
+drop table if exists hercb;
+drop table if exists salesdept;
+drop table if exists salesdev;
 
--- drop table wrong type for emp_no
 
-drop table dept_emp 
-;
+
+
+
  -- create table dept_emp
+
 create table dept_emp(
-emp_no int,
-dept_no varchar(15)
+emp_no int not null,
+dept_no varchar(15),
+primary key (emp_no),
+foreign key (dept_no) references departments(dept_no)
 )
+;
+insert into dept_emp (emp_no, dept_no)
+;
+
+select *
+from dept_emp de 
 ;
 
 
 create table dept_manager(
-dept_no int, 
-emp_no int
+dept_no varchar(15), 
+emp_no int,
+primary key (dept_no),
+foreign key (emp_no) references employees(emp_no)
 )
 ;
-
 
 
 create table employees(
@@ -52,9 +69,17 @@ birth_date date,
 first_name varchar(30) not null, 
 last_name varchar(30) not null,
 sex varchar(3) not null,
-hire_date date
+hire_date date,
+primary key (emp_no)
 )
 ;
+-- update FK
+alter table employees
+add constraint fk_emp_title
+foreign key (emp_title_id) REFERENCES titles(title_id)
+;
+
+
 
 select *
 from employees e 
@@ -64,7 +89,8 @@ from employees e
 
 create table salaries(
 emp_no int,
-salary int
+salary int,
+primary key (emp_no)
 )
 ;
 
@@ -73,18 +99,12 @@ from salaries s
 ;
 
 create table titles(
-title_id int,
-title varchar(30)
+title_id varchar(30),
+title varchar(30),
+primary key (title)
 )
 ;
 
-INSERT INTO titles (title_id, title)
-VALUES (1, 'Title 1'),
-       (2, 'Title 2'),
-       (3, 'Title 3')
-;
-drop table titles
-;
 
 select *
 from titles t 
@@ -92,22 +112,13 @@ from titles t
 
 
 create table employee_salaries(
-emp_no int,
-last_name varchar(30) not null,
-first_name varchar(30) not null,
-sex varchar(3) not null,
-salary int not null
-)
-;
-dop table employee_salaries 
-;
-
-create table employee_salaries(
 emp_no int, 
 last_name varchar(30) not null,
 first_name varchar (30) not null, 
 sex varchar (3) not null,
-salary int not null
+salary int not null,
+primary key (emp_no),
+foreign key (emp_no) references employees (emp_no)
 )
 ;
 
@@ -119,8 +130,6 @@ from salaries s
 select *
 from employees e 
 ;
-
-
 
 
 select s.emp_no, e.last_name, e.first_name, e.sex, s.salary
@@ -159,76 +168,18 @@ from employees
 where hire_date >= '1986-01-01' and hire_date <= '1986-12-31'
 ;
 
-create table managers(
-dept_manager varchar(30) not null, 
-dept_no int not null, 
-dept_name varchar(30) not null, 
-emp_no int not null, 
-last_name varchar(30) not null, 
-first_name varchar (30) not null
-)
-;
-drop table managers 
-;
-
 
 create table managers(
 title varchar(30) not null, 
-dept_no int not null, 
+title_id varchar(30) not null,
+dept_no varchar(15) not null, 
 dept_name varchar(30) not null, 
 emp_no int not null, 
 last_name varchar(30) not null, 
-first_name varchar (30) not null
+first_name varchar (30) not null,
+primary key (emp_no),
+foreign key (emp_no) references employees(emp_no)
 )
-;
-
-ALTER TABLE managers 
-ADD COLUMN title_id int
-;
-
-
-
--- update dept_no to varchar
-
-alter table managers 
-add column dept_no_temp varchar(30)
-;
-
-update managers 
-set dept_no_temp = cast (dept_no as varchar)
-;
-
-alter table managers 
-drop column dept_no
-;
-
-alter table managers 
-rename column dept_no_temp to dept_no
-;
-
--- update title_id to varchar
-
-alter table managers 
-add column title_id_temp varchar(30)
-;
-
-update managers 
-set title_id_temp = cast (title_id as varchar)
-;
-
-alter table managers 
-drop column title_id
-;
-
-alter table managers 
-rename column title_id_temp to title_id
-;
-
--- update rows with null values to unknown
-
-update managers 
-set title = 'unknown'
-where title is null  
 ;
 
 
@@ -245,12 +196,12 @@ from titles t
 
 
 select * 
-from employees e 
+from employees e
 ;
 
 
 insert into managers (dept_name, dept_no, emp_no, last_name, first_name, title_id)
-select d.dept_name, d.dept_no, e.emp_no, e.last_name, e.first_name, t.title_id
+select d.dept_name, d.dept_no, e.emp_no, e.last_name, e.first_name, e.emp_title_id
 from employees e
 inner join titles t on e.emp_title_id = t.title_id
 inner join dept_manager dm on e.emp_no = dm.emp_no
@@ -261,32 +212,32 @@ inner join departments d on dm.dept_no = d.dept_no
 
 -- dept no, emp no, last name, first name and department name
 
-create table deptnos(
-dept_no int not null, 
-dept_name varchar(30) not null, 
-emp_no int not null, 
-last_name varchar(30) not null, 
-first_name varchar (30) not null
-)
-;
+--create table deptnos(
+--dept_no varchar(15) not null, 
+--dept_name varchar(30) not null, 
+--emp_no int not null, 
+--last_name varchar(30) not null, 
+--first_name varchar (30) not null
+--)
+--;
 
 -- alter table dept_no to varchar
 
-alter table deptnos 
-add column dept_no_temp varchar(20)
-;
+--alter table deptnos 
+--add column dept_no_temp varchar(20)
+--;
 
-update deptnos 
-set dept_no_temp = cast (dept_no as varchar)
-;
+--update deptnos 
+--set dept_no_temp = cast (dept_no as varchar)
+--;
 
-alter table deptnos 
-drop column dept_no
-;
+--alter table deptnos 
+--drop column dept_no
+--;
 
-alter table deptnos 
-rename column dept_no_temp to dept_no
-;
+--alter table deptnos 
+--rename column dept_no_temp to dept_no
+--;
 
 
 
@@ -315,37 +266,39 @@ inner join departments d on dm.dept_no = d.dept_no
 
 
 --- alter deptnos table to fix error on the dept_no and dept_name colums
-alter table deptnos 
-add column dept_no_temp varchar(30)
-;
+--alter table deptnos 
+--add column dept_no_temp varchar(30)
+--;
 
-update deptnos 
-set dept_no_temp = dept_no 
-;
+--update deptnos 
+--set dept_no_temp = dept_no 
+--;
 
-update deptnos 
-set dept_no = dept_name
-;
+--update deptnos 
+--set dept_no = dept_name
+--;
 
-update deptnos 
-set dept_name = dept_no_temp
-;
+--update deptnos 
+--set dept_name = dept_no_temp
+--;
 
-alter table deptnos 
-drop column dept_no_temp
-;
+--alter table deptnos 
+--drop column dept_no_temp
+--;
 
 
 -- DROP DEPTNOS TABLE
-drop table deptnos 
-;
+--drop table deptnos 
+--;
 
 create table deptnos(
 dept_no varchar(15) not null, 
 dept_name varchar(30) not null, 
 emp_no int not null, 
 last_name varchar(30) not null, 
-first_name varchar (30) not null
+first_name varchar (30) not null,
+primary key (emp_no),
+foreign key (emp_no) references employees(emp_no)
 )
 ;
 
@@ -388,23 +341,13 @@ and e.last_name like 'B%'
 ;
 
 create table salesdept(
-emp_no varchar(30),
-last_name varchar(30),
-first_name varchar(30)
-)
-;
-
--- drop table salesdept because emp_no is not varchar
-drop table salesdept 
-;
-
--- recreate table salesdept
-create table salesdept (
 emp_no int,
 last_name varchar(30),
-first_name varchar(30)
+first_name varchar(30),
+primary key (emp_no)
 )
 ;
+
 
 select *
 from deptnos d 
@@ -424,7 +367,9 @@ create table salesdev(
 emp_no int,
 last_name varchar(30),
 first_name varchar(30),
-dept_no varchar(15)
+dept_no varchar(15),
+primary key (emp_no),
+foreign key (dept_no) references departments(dept_no)
 )
 ;
 
